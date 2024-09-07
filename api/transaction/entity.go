@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 // Package transaction implements transaction entities and services
-package transaction // import "github.com/brunomvsouza/ynab.go/api/transaction"
+package transaction // import "github.com/andrew-glenn/ynab.go/api/transaction"
 
-import "github.com/brunomvsouza/ynab.go/api"
+import "github.com/andrew-glenn/ynab.go/api"
 
 // Transaction represents a full transaction for a budget
 type Transaction struct {

@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 // Package payee implements payee entities and services
-package payee // import "github.com/brunomvsouza/ynab.go/api/payee"
+package payee // import "github.com/andrew-glenn/ynab.go/api/payee"
 
 // Payee represents a payee for a budget
 type Payee struct {
