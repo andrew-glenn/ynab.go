@@ -22,7 +22,24 @@ import (
 	"github.com/andrew-glenn/ynab.go/api/payee"
 	"github.com/andrew-glenn/ynab.go/api/transaction"
 	"github.com/andrew-glenn/ynab.go/api/user"
+	"net/http/httputil"
 )
+
+type loggingTransport struct{}
+
+func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	// err is returned after dumping the response
+
+	respBytes, _ := httputil.DumpResponse(resp, true)
+	bytes = append(bytes, respBytes...)
+
+	fmt.Printf("%s\n", bytes)
+
+	return resp, err
+}
 
 const apiEndpoint = "https://api.youneedabudget.com/v1"
 
@@ -40,10 +57,15 @@ type ClientServicer interface {
 }
 
 // NewClient facilitates the creation of a new client instance
-func NewClient(accessToken string) ClientServicer {
+func NewClient(accessToken string, debug bool) ClientServicer {
 	c := &client{
 		accessToken: accessToken,
 		client:      http.DefaultClient,
+	}
+	if debug {
+		c.client = &http.Client{
+			Transport: &loggingTransport{},
+		}
 	}
 
 	c.user = user.NewService(c)
@@ -181,9 +203,13 @@ func (c *client) do(method, url string, responseModel interface{}, requestBody [
 		return response.Error
 	}
 
-	rl, err := api.ParseRateLimit(res.Header.Get("X-Rate-Limit"))
-	if err != nil {
-		return err
+	var rl *api.RateLimit
+	rateLimitHeader := res.Header.Get("X-Rate-Limit")
+	if rateLimitHeader != "" {
+		rl, err = api.ParseRateLimit(res.Header.Get("X-Rate-Limit"))
+		if err != nil {
+			return err
+		}
 	}
 
 	c.Lock()
